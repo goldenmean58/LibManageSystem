@@ -22,9 +22,9 @@ int getNowTime(){
 }
 class Author;
 class LoanInfo;
+class ReserveInfo;
 class Book;
 class Reader;
-class ReserveInfo;
 #define REMAINDER 97
 #define KEYLEN 20
 
@@ -110,6 +110,21 @@ public:
 	}
 };
 
+class LoanInfo{
+public:
+	Reader *reader;
+	int lendDay;
+    LoanInfo(Reader* reader, int lendDay):reader(reader), lendDay(lendDay){}
+};
+
+
+class ReserveInfo{
+public:
+    Reader *reader;
+    int lendDay;
+    ReserveInfo(Reader* reader, int lendDay):reader(reader), lendDay(lendDay){}
+};
+
 class Book{
 public:
 	int id;
@@ -130,30 +145,42 @@ public:
 		}
         auth->bl.push_back(this);
 	}
+    void addCurrentNum(int num){
+        currentNum+=num;
+        checkReserveInfo();
+    }
+    void addTotalNum(int num){
+        totalNum+=num;
+        //checkReserveInfo();
+    }
+    void checkReserveInfo(){ //预约相关
+        std::list<ReserveInfo>::iterator ri=this->reseverInfo.begin();
+        std::list<ReserveInfo>::iterator pre;
+        while(ri!=this->reseverInfo.end()){
+            if(this->currentNum>0){
+                this->currentNum--;
+                LoanInfo *newLoanInfo=new LoanInfo(ri->reader,ri->lendDay); //TODO: lendDay?
+                this->loanInfo.push_back(*newLoanInfo);
+                pre=ri;
+                pre++;
+                this->reseverInfo.erase(ri);
+                ri=pre;
+                continue;
+            }else{
+                break;
+            }
+            ri++;
+        }
+    }
 };
 
-typedef btree_map<int,Book*> BTree;
-
-class LoanInfo{
-public:
-	Reader *reader;
-	int lendDay;
-    LoanInfo(Reader* reader, int lendDay):reader(reader), lendDay(lendDay){}
-};
-
-class ReserveInfo{
-public:
-    Reader *reader;
-    int lendDay;
-    ReserveInfo(Reader* reader, int lendDay):reader(reader), lendDay(lendDay){}
-};
 
 class Reader{
 public:
 	int id;
     bool borrow(Book* book){
         if(book->currentNum>0){
-            book->currentNum--;
+            book->addCurrentNum(-1);
             LoanInfo *newLoanInfo=new LoanInfo(this,getNowTime());
             book->loanInfo.push_back(*newLoanInfo);
             return true;
@@ -170,7 +197,7 @@ public:
                 int now=getNowTime();
                 fine=now-it->lendDay-MAX_BORROW_DAY; //最长借阅时间
                 fine=(fine<0)?0:fine*2;
-                returnedBook->currentNum++;
+                returnedBook->addCurrentNum(1);
                 returnedBook->loanInfo.erase(it);
                 return fine;
             }
@@ -179,9 +206,8 @@ public:
         return -1;
 	}
 	bool reserveBook(Book* book){
-        return true;
-	}
-	bool reserveBook(int){
+        ReserveInfo *newReserveInfo=new ReserveInfo(this,getNowTime());
+        book->reseverInfo.push_back(*newReserveInfo);
         return true;
 	}
 	Reader(int id):id(id){
@@ -189,6 +215,7 @@ public:
 	}
 };
 
+typedef btree_map<int,Book*> BTree;
 
 class Library{
 public:
@@ -229,8 +256,8 @@ public:
 		//importedBook应该是树中已经有的图书的指针
 		//num为新购入几本
 		if(importedBook==NULL) return;
-		importedBook->totalNum+=num;
-		importedBook->currentNum+=num;
+        importedBook->addTotalNum(num);
+        importedBook->addCurrentNum(num);
 	}
 	void importBook(int id, const char *name, const char *authName, int num){
 		Book *book = findBookById(id);

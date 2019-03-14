@@ -23,11 +23,29 @@ int printMenu(){
     return choice;
 }
 
+void showBookReserveInfo(Book *book){
+    if(!book){
+        cout<<"No such a book!"<<endl;
+        return;
+    }
+    cout<<"Reserve Info:"<<endl;
+    for(auto ri : book->reseverInfo){
+        cout<<"Reader id:"<<ri.reader->id<<'\t'<<"The day on reservation:"<<ri.lendDay<<endl;
+    }
+}
+
+void showBookReserveInfo(int id){
+    Book *book=lib.findBookById(id);
+    if(book) showBookReserveInfo(book);
+    else cout<<"No such a book!"<<endl;
+}
+
 void showBookLoanInfo(Book *book){
     if(!book){
         cout<<"No such a book!"<<endl;
         return;
     }
+    cout<<"Loan Info:"<<endl;
     for(auto li : book->loanInfo){
         cout<<"Reader id:"<<li.reader->id<<'\t'<<"The day on loan:"<<li.lendDay<<endl;
     }
@@ -59,6 +77,7 @@ void showBookInfo(Book *book){
     if(book) {
         showBookBasicInfo(book);
         showBookLoanInfo(book);
+        showBookReserveInfo(book);
     }
     else cout<<"No such a book!"<<endl;
 }
@@ -81,6 +100,7 @@ int main()
     Reader* reader=NULL;
     Author* auth=NULL;
     int choice=0;
+    int yesOrNo=0;
     while(1){
         choice=printMenu();
         switch(choice){
@@ -118,7 +138,11 @@ int main()
                     if(reader->borrow(book)){
                         cout<<"Borrowed successfully!"<<endl;
                     }else{
-                        cout<<"Failed to borrow"<<endl;
+                        cout<<"Failed to borrow, because there is no book to borrow. Do you want to reserve one?(1 for y/0 for n)"<<endl;
+                        cin>>yesOrNo;
+                        if(yesOrNo==1){
+                            reader->reserveBook(book);
+                        }
                     }
                 }
                 break;
