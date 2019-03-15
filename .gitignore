@@ -31,3 +31,4 @@
 *.out
 *.app
 LibManageSystem
+.gdb_history

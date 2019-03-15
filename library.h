@@ -2,14 +2,16 @@
 #define LIBRARY_H
 
 #include<list>
-#include "btree/btree_map.h"
+#include "BTree.h"
+#include "BTree.cpp"
+//#include "btree/btree_map.h"
 #include <string.h>
 #include<iostream>
 using std::cin;
 using std::cout;
 using std::endl;
 using std::list;
-using btree::btree_map;
+//using btree::btree_map;
 #define MAX_BOOK_NUM 100
 #define MAX_AUTH_NUM 100
 #define MAX_BORROW_DAY 30
@@ -135,6 +137,9 @@ public:
 	int totalNum;
 	list<LoanInfo> loanInfo;
     list<ReserveInfo> reseverInfo;
+    Book(){
+
+    }
 	Book(int id, const char *name, const char *authName, 
 			int importNum):id(id),currentNum(importNum),totalNum(importNum){
 		strcpy(this->name,name);
@@ -172,8 +177,43 @@ public:
             ri++;
         }
     }
+    bool operator==(const Book & b)const{
+        return this->id==b.id;
+    }
+    bool operator< (const Book &b)const{
+        return this->id<b.id;
+    }
+    bool operator<= (const Book &b)const{
+        return this->id<b.id;
+    }
+    bool operator>= (const Book &b)const{
+        return this->id>=b.id;
+    }
+    bool operator> (const Book &b)const{
+        return this->id>b.id;
+    }
+    bool operator==(int id)const{
+        return this->id==id;
+    }
+    bool operator< (int id)const{
+        return this->id<id;
+    }
+    bool operator<= (int id)const{
+        return this->id<id;
+    }
+    bool operator>= (int id)const{
+        return this->id>=id;
+    }
+    bool operator> (int id)const{
+        return this->id>id;
+    }
+    friend ostream &operator<<(ostream &output, const Book &book){
+        output << book.id;
+        return output;
+    }
 };
 
+typedef BTree<Book> MyBTree;
 
 class Reader{
 public:
@@ -215,22 +255,16 @@ public:
 	}
 };
 
-typedef btree_map<int,Book*> BTree;
 
 class Library{
 public:
 	int readerNum; //读者数量
 	int totalBookNum; //全馆图书数量
 	int difBookNum; //全馆不相同图书数量
-	static BTree *btree;
+	static MyBTree *btree;
     list<Reader *> reader;
 	Book *findBookById(int id){ //树中查找Book NULL表示不存在
-		BTree::iterator it=btree->find(id);
-		if(it!=btree->end()){
-			return (*it).second;
-		}else{
-			return NULL;
-		}
+		return btree->find(btree->getRoot(),id);
 	}
     Reader *findReaderById(int id){
         for(auto r : reader){
@@ -247,7 +281,7 @@ public:
         return NULL;
     }
 	Library():readerNum(0),totalBookNum(0),difBookNum(0){
-		btree = new BTree;
+		btree = new MyBTree(4);
 	}
 	~Library(){
 		delete btree;
@@ -266,12 +300,12 @@ public:
             return;
         }
 	    book = new Book(id,name,authName,num);
-        btree->insert(std::make_pair(id,book));
+        btree->insert(*book);
 	}
 	bool removeBook(int id){ //清除库存 完全删除
 		Book *book = findBookById(id);
         if(book){
-            btree->erase(id);
+            btree->erase(*book);
             return true;
         }else{
             return false;

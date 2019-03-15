@@ -6,7 +6,7 @@ using std::endl;
 
 Library lib;
 HashTable<Author*> Book::ht;
-BTree *Library::btree;
+MyBTree *Library::btree;
 
 int printMenu(){
     int choice=0;
@@ -17,7 +17,8 @@ int printMenu(){
     cout<<"5. Show Book's Status."<<endl;
     cout<<"6. Show Author's Works."<<endl;
     cout<<"7. Reserve Books."<<endl;
-    cout<<"8. Exit System."<<endl;
+    cout<<"8. Print The Whole B-Tree."<<endl;
+    cout<<"9. Exit System."<<endl;
     cout<<"Choice : ";
     cin>>choice;
     return choice;
@@ -199,6 +200,9 @@ int main()
                 }
                 break;
             case 8:
+                lib.btree->printWholeTree();
+                break;
+            case 9:
                 return 0;
                 break;
             default:
